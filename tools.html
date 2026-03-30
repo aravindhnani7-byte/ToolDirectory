@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignalStack AI | Discover AI Tools That Actually Fit Your Workflow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="auth.js"></script>
+    <script>
+        (function () {
+            let bootstrapUser = null;
+
+            const params = new URLSearchParams(window.location.search);
+            const authParam = params.get('auth');
+            if (authParam) {
+                try {
+                    const payload = JSON.parse(decodeURIComponent(authParam));
+                    if (payload && payload.username) {
+                        bootstrapUser = payload;
+                        if (window.AuthStorage) {
+                            AuthStorage.saveCurrentUser(payload);
+                        }
+                    }
+                } catch (error) {
+                    // Ignore malformed auth params.
+                }
+                params.delete('auth');
+                const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}${window.location.hash}`;
+                window.history.replaceState({}, '', nextUrl);
+            }
+
+            const currentUser = window.AuthStorage ? AuthStorage.getCurrentUser() : null;
+            if (!currentUser && !bootstrapUser) {
+                window.location.replace('login.html?reason=auth');
+                return;
+            }
+
+            if (bootstrapUser && !currentUser) {
+                window.__bootstrapUser = bootstrapUser;
+            }
+        })();
+    </script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        obsidian: '#0b1020',
+                        ink: '#111936',
+                        mist: '#93a4c7',
+                        glow: '#7dd3fc',
+                        ember: '#f97316',
+                        lime: '#84cc16',
+                        sand: '#f6efe4'
+                    },
+                    fontFamily: {
+                        display: ['Sora', 'sans-serif'],
+                        body: ['Space Grotesk', 'sans-serif']
+                    },
+                    boxShadow: {
+                        aura: '0 20px 60px rgba(12, 24, 55, 0.35)'
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="site-shell font-body text-white">
+
+    <header class="relative z-10">
+        <nav class="mx-auto flex max-w-7xl items-center justify-between px-4 py-6 md:px-6">
+            <a href="#top" class="flex items-center gap-3">
+                <div class="brand-mark">S</div>
+                <div>
+                    <p class="font-display text-lg font-bold tracking-wide">SignalStack AI</p>
+                    <p class="text-xs uppercase tracking-[0.35em] text-slate-400">Tool Radar</p>
+                </div>
+            </a>
+
+            <div class="hidden items-center gap-6 text-sm font-medium text-slate-300 md:flex">
+                <a href="#discover" class="transition hover:text-white">Discover</a>
+                <a href="#directory" class="transition hover:text-white">Directory</a>
+                <a href="#insights" class="transition hover:text-white">Insights</a>
+            </div>
+
+            <div class="flex items-center gap-3" id="authActions">
+                <a href="login.html" class="rounded-full border border-white/15 px-4 py-2 text-sm text-slate-200 transition hover:border-white/40 hover:bg-white/5">Login</a>
+                <a href="register.html" class="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:scale-[1.02]">Join Free</a>
+            </div>
+        </nav>
+
+        <section id="top" class="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-8 md:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:pt-12">
+            <div>
+                <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.32em] text-teal-200">
+                    <span class="h-2 w-2 rounded-full bg-teal-300"></span>
+                    Curated for fast-moving creators
+                </div>
+
+                <h1 class="mt-6 max-w-4xl font-display text-5xl font-extrabold leading-tight md:text-7xl">
+                    Your ultimate AI tool
+                    <span class="text-gradient">directory starts here.</span>
+                </h1>
+
+                <p class="mt-6 max-w-2xl text-lg leading-8 text-slate-300 md:text-xl">
+                    Search by workflow, compare categories, and surface the best tools for image, video, coding, audio, and presentations without digging through noise.
+                </p>
+
+                <div class="mt-8 flex flex-col gap-4 sm:flex-row">
+                    <button type="button" onclick="scrollToDirectory()" class="rounded-full bg-teal-300 px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-slate-950 transition hover:bg-teal-200">
+                        Explore Directory
+                    </button>
+                    <button type="button" onclick="openToolModal(1)" class="rounded-full border border-white/15 px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-slate-100 transition hover:border-white/40 hover:bg-white/5">
+                        View Featured Pick
+                    </button>
+                </div>
+
+                <div id="insights" class="mt-10 grid gap-4 sm:grid-cols-3">
+                    <article class="metric-card">
+                        <p id="metric-count" class="metric-value">25</p>
+                        <p class="metric-label">Handpicked tools</p>
+                    </article>
+                    <article class="metric-card">
+                        <p id="metric-categories" class="metric-value">5</p>
+                        <p class="metric-label">Creative categories</p>
+                    </article>
+                    <article class="metric-card">
+                        <p id="metric-featured" class="metric-value">1</p>
+                        <p class="metric-label">Featured spotlight</p>
+                    </article>
+                </div>
+            </div>
+
+            <aside class="hero-panel shadow-aura">
+                <p class="eyebrow">This Week's Standout</p>
+                <div class="mt-5 flex items-start gap-4">
+                    <div class="feature-logo">
+                        <img id="featured-logo" src="" alt="Featured tool logo" class="h-full w-full object-contain">
+                    </div>
+                    <div class="min-w-0">
+                        <p id="featured-category" class="text-xs uppercase tracking-[0.28em] text-amber-200"></p>
+                        <h2 id="featured-name" class="mt-2 font-display text-3xl font-bold"></h2>
+                    </div>
+                </div>
+                <p id="featured-description" class="mt-5 text-sm leading-7 text-slate-300"></p>
+                <div class="mt-6 grid gap-3">
+                    <div class="detail-chip">
+                        <span>Why it stands out</span>
+                        <strong id="featured-detail"></strong>
+                    </div>
+                    <div class="detail-chip">
+                        <span>Access note</span>
+                        <strong id="featured-note"></strong>
+                    </div>
+                </div>
+                <div class="mt-8 flex gap-3">
+                    <a id="featured-link" href="#" target="_blank" rel="noreferrer" class="rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:scale-[1.02]">
+                        Visit Tool
+                    </a>
+                    <button type="button" onclick="scrollToDirectory()" class="rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/40">
+                        Compare Others
+                    </button>
+                </div>
+            </aside>
+        </section>
+    </header>
+
+    <main id="discover" class="relative z-10 pb-20">
+        <section class="mx-auto max-w-7xl px-4 md:px-6">
+            <div class="section-shell">
+                <div class="section-head">
+                    <div>
+                        <p class="section-eyebrow">Workflow Lanes</p>
+                        <h2 class="section-title">Jump directly into the kind of work you want to do</h2>
+                    </div>
+                    <p class="max-w-2xl text-sm leading-7 text-slate-300">
+                        Each lane highlights a different creative task so the directory feels guided rather than overwhelming.
+                    </p>
+                </div>
+                <div id="category-showcase" class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5"></div>
+            </div>
+        </section>
+
+        <section id="directory" class="mx-auto mt-8 max-w-7xl px-4 md:px-6">
+            <div class="section-shell">
+                <div class="section-head gap-6">
+                    <div>
+                        <p class="section-eyebrow">Directory</p>
+                        <h2 class="section-title">Browse, search, and compare without friction</h2>
+                    </div>
+                    <div class="flex flex-wrap gap-3 text-sm text-slate-300">
+                        <div class="pill-info">
+                            <i class="fa-solid fa-sparkles"></i>
+                            <span>Interactive spotlight</span>
+                        </div>
+                        <div class="pill-info">
+                            <i class="fa-solid fa-layer-group"></i>
+                            <span>Category filters</span>
+                        </div>
+                        <div class="pill-info">
+                            <i class="fa-solid fa-arrow-up-wide-short"></i>
+                            <span>Smart sorting</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 grid gap-4 xl:grid-cols-[1.3fr_0.7fr]">
+                    <div class="search-panel">
+                        <label for="searchInput" class="sr-only">Search AI tools</label>
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+                            <input id="searchInput" type="text" placeholder="Search by tool name, workflow, capability, or note">
+                        </div>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="control-panel">
+                            <label for="sortSelect" class="control-label">Sort by</label>
+                            <select id="sortSelect" class="control-input">
+                                <option value="featured">Featured first</option>
+                                <option value="az">Name A-Z</option>
+                                <option value="category">Category</option>
+                            </select>
+                        </div>
+                        <div class="control-panel">
+                            <p class="control-label">Matches</p>
+                            <p id="results-count" class="control-stat">25 tools</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="category-tabs" class="mt-8 flex flex-wrap gap-3"></div>
+
+                <div class="mt-8 directory-layout">
+                    <div class="directory-main">
+                        <div id="tools-grid" class="tools-grid"></div>
+                        <div id="empty-state" class="empty-state hidden">
+                            <i class="fa-solid fa-satellite-dish text-4xl text-teal-300"></i>
+                            <h3 class="mt-4 font-display text-2xl font-bold text-white">No tools matched this search.</h3>
+                            <p class="mt-2 max-w-md text-sm leading-7 text-slate-300">Try another keyword, switch categories, or clear the filters to bring the full directory back.</p>
+                            <button type="button" onclick="resetFilters()" class="mt-6 rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:scale-[1.02]">
+                                Reset Filters
+                            </button>
+                        </div>
+                    </div>
+
+                    <aside class="sidebar-shell">
+                        <div class="sidebar-card">
+                            <p class="sidebar-eyebrow">Quick Advice</p>
+                            <h3 class="sidebar-title">How to choose faster</h3>
+                            <ul class="sidebar-list">
+                                <li>Use category first, then search to narrow by task.</li>
+                                <li>Open the spotlight card when you want more context.</li>
+                                <li>Check the access note before committing time.</li>
+                            </ul>
+                        </div>
+
+                        <div class="sidebar-card">
+                            <p class="sidebar-eyebrow">Trending Mix</p>
+                            <div id="trending-list" class="mt-4 space-y-3"></div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="toolModal" class="modal-shell hidden" aria-hidden="true">
+        <div class="modal-backdrop" onclick="closeToolModal()"></div>
+        <div class="modal-card">
+            <button type="button" class="modal-close" onclick="closeToolModal()" aria-label="Close details">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-start gap-4">
+                <div class="feature-logo h-20 w-20 shrink-0">
+                    <img id="modal-logo" src="" alt="Selected tool logo" class="h-full w-full object-contain">
+                </div>
+                <div>
+                    <p id="modal-category" class="text-xs uppercase tracking-[0.28em] text-amber-200"></p>
+                    <h3 id="modal-name" class="mt-2 font-display text-3xl font-bold text-white"></h3>
+                    <p id="modal-desc" class="mt-4 text-sm leading-7 text-slate-300"></p>
+                </div>
+            </div>
+            <div class="mt-8 grid gap-4 md:grid-cols-2">
+                <div class="detail-chip min-h-24">
+                    <span>Capability</span>
+                    <strong id="modal-detail"></strong>
+                </div>
+                <div class="detail-chip min-h-24">
+                    <span>Access note</span>
+                    <strong id="modal-note"></strong>
+                </div>
+            </div>
+            <div class="mt-8 flex flex-wrap gap-3">
+                <a id="modal-link" href="#" target="_blank" rel="noreferrer" class="rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:scale-[1.02]">
+                    Open Tool
+                </a>
+                <button type="button" onclick="closeToolModal()" class="rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/40">
+                    Keep Browsing
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const authActions = document.getElementById('authActions');
+        if (authActions && window.AuthStorage) {
+            const currentUser = AuthStorage.getCurrentUser() || window.__bootstrapUser;
+            if (currentUser) {
+                authActions.innerHTML = `
+                    <span class="text-sm text-slate-300">Welcome, ${currentUser.username}</span>
+                    <button type="button" id="logoutBtn" class="rounded-full border border-white/15 px-4 py-2 text-sm text-slate-200 transition hover:border-white/40 hover:bg-white/5">Logout</button>
+                `;
+                const logoutBtn = document.getElementById('logoutBtn');
+                logoutBtn.addEventListener('click', () => {
+                    if (window.AuthStorage) {
+                        AuthStorage.logout();
+                    }
+                    window.location.href = 'login.html';
+                });
+            }
+        }
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | SignalStack AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Sora:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="login.css">
+</head>
+
+<body class="auth-page">
+    <div class="auth-ambient auth-ambient-left"></div>
+    <div class="auth-ambient auth-ambient-right"></div>
+
+    <main class="auth-layout">
+        <section class="auth-copy">
+            <a href="tools.html" class="brand-link">
+                <span class="brand-badge">S</span>
+                <span>
+                    <strong>SignalStack AI</strong>
+                    <small>Tool Radar</small>
+                </span>
+            </a>
+
+            <p class="auth-kicker">Welcome back</p>
+            <h1>Step into a sharper AI discovery workspace.</h1>
+            <p class="auth-text">
+                Your saved account gives you a cleaner way to move between tools, ideas, and creative experiments.
+            </p>
+
+            <div class="auth-points">
+                <article>
+                    <strong>Faster browsing</strong>
+                    <p>Move straight into the curated tool directory.</p>
+                </article>
+                <article>
+                    <strong>Cleaner design</strong>
+                    <p>One consistent brand across discovery and access.</p>
+                </article>
+                <article>
+                    <strong>Simple local demo auth</strong>
+                    <p>Credentials are stored in browser local storage for this prototype.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="auth-panel">
+            <div class="panel-top">
+                <p class="auth-kicker">Account Access</p>
+                <h2>Login</h2>
+                <p class="panel-copy">Use your username and password to continue.</p>
+            </div>
+
+            <form id="loginForm" class="auth-form">
+                <label>
+                    <span>Username</span>
+                    <input type="text" id="username" placeholder="Enter your username" required>
+                </label>
+
+                <label>
+                    <span>Password</span>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </label>
+
+                <button type="submit" class="auth-btn">Enter Dashboard</button>
+            </form>
+
+            <div class="auth-alt-action">
+                <a href="register.html" class="auth-link-btn">Create New Account</a>
+                <button type="button" id="clearAuthStorage" class="auth-link-btn">Clear Saved Demo Data</button>
+            </div>
+
+            <p id="loginMessage" class="form-message" aria-live="polite"></p>
+
+            <p class="switch-copy">
+                New here?
+                <a href="register.html">Create an account</a>
+            </p>
+        </section>
+    </main>
+
+    <script src="auth.js"></script>
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const loginMessage = document.getElementById('loginMessage');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const clearStorageButton = document.getElementById('clearAuthStorage');
+
+        const setMessage = (message, type) => {
+            loginMessage.textContent = message;
+            loginMessage.className = `form-message ${type ? `is-${type}` : ''}`.trim();
+        };
+
+        if (AuthStorage.isAvailable()) {
+            const lastUsername = AuthStorage.getLastUsername();
+            if (lastUsername) {
+                usernameInput.value = lastUsername;
+            }
+        } else {
+            setMessage('Local storage is blocked in this browser. Demo logins cannot be saved.', 'error');
+        }
+
+        loginForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+            const users = AuthStorage.getUsers();
+
+            const user = users.find((item) => item.username.toLowerCase() === username.toLowerCase() && item.password === password);
+
+            if (user) {
+                AuthStorage.saveCurrentUser(user);
+                AuthStorage.recordActivity('login', { username: user.username });
+                setMessage('Login successful. Redirecting to the directory...', 'success');
+                window.setTimeout(function () {
+                    const payload = {
+                        username: user.username,
+                        email: user.email || '',
+                        loginAt: new Date().toISOString()
+                    };
+                    const encoded = encodeURIComponent(JSON.stringify(payload));
+                    window.location.href = `tools.html?auth=${encoded}`;
+                }, 700);
+                return;
+            }
+
+            setMessage('That username and password combination did not match this demo account.', 'error');
+        });
+
+        clearStorageButton.addEventListener('click', function () {
+            const cleared = AuthStorage.clear();
+            if (cleared) {
+                loginForm.reset();
+                setMessage('Saved demo data cleared. You can register a fresh account now.', 'success');
+            } else {
+                setMessage('Unable to clear storage in this browser.', 'error');
+            }
+        });
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('reason') === 'auth') {
+            setMessage('Please log in to access the tools directory.', 'error');
+        }
+    </script>
+</body>
+
+</html>

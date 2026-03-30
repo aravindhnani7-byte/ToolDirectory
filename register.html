@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | SignalStack AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="login.css">
+</head>
+<body class="auth-page">
+    <div class="auth-ambient auth-ambient-left"></div>
+    <div class="auth-ambient auth-ambient-right"></div>
+
+    <main class="auth-layout">
+        <section class="auth-copy">
+            <a href="tools.html" class="brand-link">
+                <span class="brand-badge">S</span>
+                <span>
+                    <strong>SignalStack AI</strong>
+                    <small>Tool Radar</small>
+                </span>
+            </a>
+
+            <p class="auth-kicker">Join the directory</p>
+            <h1>Create a clean entry point for your AI workflow.</h1>
+            <p class="auth-text">
+                This prototype stores registration details locally in your browser so you can move through the experience without setting up a backend.
+            </p>
+
+            <div class="auth-points">
+                <article>
+                    <strong>Prototype-ready</strong>
+                    <p>Easy to demo without server setup.</p>
+                </article>
+                <article>
+                    <strong>Consistent interface</strong>
+                    <p>Matches the look and tone of the tool directory.</p>
+                </article>
+                <article>
+                    <strong>Clear validation</strong>
+                    <p>Better feedback for duplicate usernames and password mismatch.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="auth-panel">
+            <div class="panel-top">
+                <p class="auth-kicker">Create Account</p>
+                <h2>Register</h2>
+                <p class="panel-copy">Set up a demo account to access the directory.</p>
+            </div>
+
+            <form id="registerForm" class="auth-form">
+                <label>
+                    <span>Username</span>
+                    <input type="text" id="regUsername" placeholder="Choose a username" required>
+                </label>
+
+                <label>
+                    <span>Email</span>
+                    <input type="email" id="regEmail" placeholder="Enter your email" required>
+                </label>
+
+                <label>
+                    <span>Password</span>
+                    <input type="password" id="regPassword" placeholder="Create a password" required>
+                </label>
+
+                <label>
+                    <span>Confirm Password</span>
+                    <input type="password" id="confirmPassword" placeholder="Repeat your password" required>
+                </label>
+
+                <button type="submit" class="auth-btn">Create Account</button>
+            </form>
+
+            <div class="auth-alt-action">
+                <a href="login.html" class="auth-link-btn">Go To Login</a>
+                <button type="button" id="clearAuthStorage" class="auth-link-btn">Clear Saved Demo Data</button>
+            </div>
+
+            <p id="registerMessage" class="form-message" aria-live="polite"></p>
+
+            <p class="switch-copy">
+                Already registered?
+                <a href="login.html">Login instead</a>
+            </p>
+        </section>
+    </main>
+
+    <script src="auth.js"></script>
+    <script>
+        const registerForm = document.getElementById('registerForm');
+        const registerMessage = document.getElementById('registerMessage');
+        const clearStorageButton = document.getElementById('clearAuthStorage');
+
+        const setMessage = (message, type) => {
+            registerMessage.textContent = message;
+            registerMessage.className = `form-message ${type ? `is-${type}` : ''}`.trim();
+        };
+
+        registerForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            if (!AuthStorage.isAvailable()) {
+                setMessage('Local storage is blocked in this browser. Demo accounts cannot be saved.', 'error');
+                return;
+            }
+
+            const username = document.getElementById('regUsername').value.trim();
+            const email = document.getElementById('regEmail').value.trim().toLowerCase();
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!username) {
+                setMessage('Please enter a username to continue.', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                setMessage('Passwords do not match. Please re-enter them.', 'error');
+                return;
+            }
+
+            const users = AuthStorage.getUsers();
+            const usernameExists = users.some((user) => user.username.toLowerCase() === username.toLowerCase());
+
+            if (usernameExists) {
+                setMessage('That username already exists in this demo. Try another one.', 'error');
+                return;
+            }
+
+            users.push({
+                username,
+                email,
+                password,
+                createdAt: new Date().toISOString()
+            });
+
+            AuthStorage.setUsers(users);
+            AuthStorage.recordActivity('register', { username });
+
+            setMessage('Account created successfully. Redirecting to login...', 'success');
+
+            window.setTimeout(function () {
+                window.location.href = 'login.html';
+            }, 800);
+        });
+
+        clearStorageButton.addEventListener('click', function () {
+            const cleared = AuthStorage.clear();
+            if (cleared) {
+                registerForm.reset();
+                setMessage('Saved demo data cleared. You can register a fresh account now.', 'success');
+            } else {
+                setMessage('Unable to clear storage in this browser.', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
